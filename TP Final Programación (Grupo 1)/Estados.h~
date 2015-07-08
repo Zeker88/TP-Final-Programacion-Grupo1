@@ -1,0 +1,55 @@
+#include "Header.h"
+
+extern STATE A[];
+extern STATE B[];
+extern STATE C[];
+
+STATE A[]=
+{
+	{'H',B,Hola},
+	{'D',C,Chau},
+	{FIN_TABLA,A,reset}
+};
+
+STATE B[]=
+{
+	{'P',A,Adios},
+	{FIN_TABLA,A,reset}
+};
+
+STATE C[]=
+{
+	{'G',A,Gato},
+	{FIN_TABLA,A,reset}
+};
+
+
+/* Prototipos */
+
+void reset (void)
+{
+printf("Reset");
+}
+
+void Hola (void)
+{
+
+}
+
+
+void Chau (void)
+{
+
+}
+
+
+void Adios (void)
+{
+
+}
+
+
+void Gato (void)
+{
+
+}

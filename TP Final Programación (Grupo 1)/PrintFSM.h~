@@ -1,0 +1,35 @@
+#ifndef printfsm_h
+#define printfsm_h
+
+void printfsm (void)
+{
+STATE* stateclon;
+LINK* linkclon;
+
+    FILE* p=fopen("Estados.c","w+");
+
+    fprintf(p,"%s\n%s\n%s\n\n","#include <stdio.h>;","#include <stdlib.h>;","#include \"Header.h\";");
+
+    for(stateclon=statedir;stateclon!=NULL;stateclon=stateclon->p2next)
+        fprintf(p,"%s %s[];\n","extern STATE",stateclon->nombre);
+
+
+    for(stateclon=statedir;stateclon!=NULL;stateclon=stateclon->p2next)
+    {
+        fprintf(p,"\nSTATE %s[]=\n\n\t",stateclon->nombre);
+
+        for(linkclon=linkdir;linkclon!=NULL;linkclon=linkclon->p2next)
+        {
+            if(!strcmp(linkclon->origen,stateclon->nombre))
+            {
+                fprintf(p,"{'%c',%s,%s},\n\t",linkclon->evento,linkclon->destino,linkclon->fun_transf);
+            }
+        }
+        fprintf(p,"{FIN_TABLA,%s,match};\n}",statedir->nombre);
+    }
+
+    fclose(p);
+
+}
+
+#endif // printfsm_h

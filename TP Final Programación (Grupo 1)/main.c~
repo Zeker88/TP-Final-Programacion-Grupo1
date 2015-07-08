@@ -1,0 +1,531 @@
+#include <allegro5/allegro.h>
+#include<allegro5/allegro_native_dialog.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_image.h> 
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include"Links_States.h"
+#include"PrintFSM.h"
+
+
+
+char nombre[20];//
+const float FPS = 60; 
+const int SCREEN_W = 1000;
+const int SCREEN_H = 1000;
+int coordx=0,coordy=0,writen=0;
+int cont=0,future=4,contw=0;
+char wordd[20];
+char evento;
+char function[20];
+STATE* statedir=NULL;
+LINK* linkdir=NULL;
+ 
+int main(void)
+
+{   int a=0;
+    int contw=0;
+    int evinc =0;
+    int hold=0;
+    int hlp=0;
+    float xfun,yfun,xev,yev;
+   STATE *p2state=NULL;
+   STATE *p2state2=NULL;
+   STATE *p2ss=NULL;
+   STATE *origin=NULL;
+   STATE *desti=NULL;
+   STATE *p2el=NULL;
+   LINK *pointer=NULL;
+   int contlink=0,numoflink=0,dirlink=0,ward=0;
+   float pendiente=0;
+   ALLEGRO_DISPLAY *display = NULL;
+   ALLEGRO_EVENT_QUEUE *event_queue = NULL;
+   ALLEGRO_TIMER *timer = NULL;
+   ALLEGRO_BITMAP *badd=NULL;
+   ALLEGRO_BITMAP *bunir=NULL;
+   ALLEGRO_BITMAP *bdel=NULL;
+   ALLEGRO_BITMAP *itba=NULL;
+   ALLEGRO_BITMAP *texto=NULL;
+   ALLEGRO_BITMAP *estado=NULL;
+   ALLEGRO_BITMAP *help=NULL;
+   ALLEGRO_BITMAP *borrar=NULL;
+   ALLEGRO_BITMAP *save=NULL;
+   ALLEGRO_BITMAP *clearbtn=NULL;
+   ALLEGRO_BITMAP *wscreen=NULL;
+   ALLEGRO_BITMAP *escrib=NULL;
+   ALLEGRO_BITMAP *manual=NULL;
+   ALLEGRO_KEYBOARD_STATE keystate;
+   ALLEGRO_MOUSE_STATE moustate;
+   bool redraw = true;
+   bool redib = false;
+   
+   ALLEGRO_USTR* string2 = al_ustr_new("");            //creo ustring para escribir en allegro
+   int position = (int)al_ustr_size(string2);
+   
+   
+ 
+   if(!al_init()) {
+      fprintf(stderr, "failed to initialize allegro!\n");
+      return -1;
+   }
+  
+   al_init_primitives_addon();
+   al_init_font_addon();
+   al_init_ttf_addon();
+  
+   if(!al_init_image_addon()) {
+      al_show_native_message_box(display, "Error", "Error", "Failed to initialize al_init_image_addon!", 
+                                 NULL, ALLEGRO_MESSAGEBOX_ERROR);
+      return 0;
+   }
+    
+   if(!al_install_keyboard()) {
+      al_show_native_message_box(display, "Error", "Error", "Failed to initialize keyboard!", 
+                                 NULL, ALLEGRO_MESSAGEBOX_ERROR);
+      return 0;
+   }
+ 
+   if(!al_install_mouse()) {
+      fprintf(stderr, "failed to initialize the mouse!\n");
+      return -1;
+   }
+ 
+   timer = al_create_timer(1.0 / FPS);
+   if(!timer) {
+      fprintf(stderr, "failed to create timer!\n");
+      return -1;
+   }
+ 
+   display = al_create_display(SCREEN_W, SCREEN_H);
+   if(!display) {
+      fprintf(stderr, "failed to create display!\n");
+      al_destroy_timer(timer);
+      return -1;
+   }
+   ALLEGRO_FONT *font=al_load_font("arial-narrow-bold.ttf",20,0);
+   if (!font){
+      fprintf(stderr, "Could not load 'the font.ttf'.\n");
+      return -1;}
+ 
+ 
+   al_clear_to_color(al_map_rgb(0, 0, 0));
+   badd=al_load_bitmap("+state.png");
+   bdel=al_load_bitmap("-state.png");
+   bunir=al_load_bitmap("+Link.png");
+   help=al_load_bitmap("help.png");
+   itba=al_load_bitmap("itba.png");
+   estado=al_load_bitmap("state.png");
+   texto=al_load_bitmap("-Link.png");
+   borrar=al_load_bitmap("errase.png");
+   save=al_load_bitmap("diske.png");
+   clearbtn=al_load_bitmap("clear.png");
+   wscreen=al_load_bitmap("white.png");
+   escrib=al_load_bitmap("escri.png");
+   al_clear_to_color(al_map_rgb(255,255,255));
+   manual=al_load_bitmap("man.png");
+  
+   
+  
+   event_queue = al_create_event_queue();
+   if(!event_queue) {
+      fprintf(stderr, "failed to create event_queue!\n");
+      al_destroy_bitmap(badd);
+      al_destroy_display(display);
+      al_destroy_timer(timer);
+      return -1;
+   }
+   al_register_event_source(event_queue, al_get_display_event_source(display));
+ 
+   al_register_event_source(event_queue, al_get_timer_event_source(timer));
+   al_register_event_source(event_queue, al_get_keyboard_event_source());
+ 
+   al_register_event_source(event_queue, al_get_mouse_event_source());
+   al_start_timer(timer);
+   
+ 
+   
+ 
+   
+   al_flip_display();
+ 
+   
+ 
+   while(1)
+   {
+      ALLEGRO_EVENT ev;
+      al_wait_for_event(event_queue, &ev);
+      
+ 
+      if(ev.type == ALLEGRO_EVENT_TIMER) {
+         redraw = true;//redibujo cuando toca el timer
+      }
+      else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+         break;
+      }
+      else if(ev.type == ALLEGRO_EVENT_MOUSE_AXES || ev.type == ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY) {
+          coordx = ev.mouse.x;
+          coordy = ev.mouse.y;
+          if(future==0){
+              redib=true;  
+                        }
+          
+      }
+      else if (ev.type== ALLEGRO_EVENT_KEY_CHAR){  
+          if(ev.keyboard.keycode==ALLEGRO_KEY_ENTER){
+              hlp=0;
+          }             
+          if(writen){
+                          
+                        if(ev.keyboard.unichar >= 32)  
+                        {  
+                            contw++;
+                            position += al_ustr_append_chr(string2, ev.keyboard.unichar);  
+                        }  
+                        else if(ev.keyboard.keycode == ALLEGRO_KEY_BACKSPACE)  
+                        {  
+                            if(al_ustr_prev(string2, &position))  
+                                al_ustr_truncate(string2, position);  
+                        }
+                        
+                        if(ev.keyboard.unichar == 13){
+                            writen=0;
+                            strcpy(wordd,al_cstr(string2));
+                            for(contw;contw>=0;contw--){
+                            al_ustr_remove_chr(string2,contw);
+                        }
+                            contw=0;
+  
+                            
+                        }
+                        al_draw_bitmap(escrib,700,940,0);                       
+                   
+                        }
+                             
+                            
+                          
+      }else if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN){
+       if((p2state2=getstate2(coordx,coordy))!=NULL){
+       al_get_mouse_state(&moustate);
+       while(moustate.buttons & 3){  
+       p2state2->x=moustate.x;
+       p2state2->y=moustate.y;
+       al_get_mouse_state(&moustate);
+       static STATE* statefnd;
+    static STATE*busclink;
+    static LINK* linki;
+    
+   al_clear_to_color(al_map_rgb(255,255,255));
+   al_draw_bitmap(badd,0,0,0);
+   al_draw_bitmap(bdel,0,56,0);
+   al_draw_bitmap(bunir,0,112,0);
+   al_draw_bitmap(itba,0,900,0);
+   al_draw_bitmap(texto,0,168,0);
+   al_draw_bitmap(save,0,224,0);
+   al_draw_bitmap(clearbtn,0,280,0);
+   al_draw_bitmap(help,0,336,0);
+   al_draw_bitmap(escrib,700,940,0);
+   al_draw_ustr(font, al_map_rgb(255, 255, 255), 730, 960, ALLEGRO_ALIGN_LEFT, string2);
+   
+   for(statefnd=statedir; statefnd!=NULL;statefnd=statefnd->p2next){
+         al_draw_bitmap(estado,statefnd->x,statefnd->y,0);
+         al_draw_justified_text(font,al_map_rgb(255,255,255),(statefnd->x)+10,(statefnd->x)+20,(statefnd->y)+17.5,0,0,statefnd->nombre);
+    }
+   if(future==0){
+       al_draw_bitmap(estado,coordx,coordy,0);
+   }
+
+   for(linki=linkdir;linki!=NULL;linki=linki->p2next){
+       for(statefnd=statedir;(strcmp(statefnd->nombre,linki->origen))!=0;statefnd=statefnd->p2next);
+       for(busclink=statedir;(strcmp(busclink->nombre,linki->destino))!=0;busclink=statefnd->p2next);
+       if(statefnd->x<busclink->x){
+                                             al_draw_line(((*statefnd).x)+DIAM,((*statefnd).y)+RADIO,((*busclink).x),((*busclink).y)+RADIO,al_map_rgb(190,0,0),7);
+                                             al_draw_filled_circle((((busclink->x) + DIAM+(statefnd->x))/2+busclink->x)/2,(((statefnd->y) +DIAM+ (busclink->y))/2+busclink->y+50)/2,8.,al_map_rgb(0,0,0));
+                                             }else{al_draw_line(((*statefnd).x),((*statefnd).y)+RADIO,(((*busclink).x)+DIAM),((*busclink).y)+RADIO,al_map_rgb(190,0,0),7);
+                                             al_draw_filled_circle((((busclink->x) + DIAM +(statefnd->x))/2+busclink->x+DIAM)/2,(((statefnd->y) +DIAM+ (busclink->y))/2+busclink->y+RADIO)/2,8.,al_map_rgb(0,0,0));
+                                                   }
+       
+       
+   }
+   if(hlp){
+   al_draw_bitmap(manual,0,0,0);
+   }
+   al_flip_display();
+       
+      }   
+      
+      }
+      }
+      
+      
+      
+      else if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+          hold=0;    
+          if((0<coordx)&&(coordx<200)){
+                                if((0<coordy)&&(coordy<56)){ future=0;
+                                                            hlp=0;
+                                                            evinc=0;
+                                                            contlink=0;
+                                                            writen=1;
+                                                            al_show_native_message_box(display, "Stop!", "Introduce State Name", "Please, write the State's name in the box below and press enter (after that you will be allowed to succesfully place your State)", 
+                                 NULL, ALLEGRO_MESSAGEBOX_OK_CANCEL);
+                                                       //add
+                                }
+                                if((56<coordy)&&(coordy<112)){ future=1;
+                                                                hlp=0;
+                                                                contlink=0;
+                                                               writen=0;
+                                                               evinc=0;
+                                }
+                                if((112<coordy)&&(coordy<168)){ 
+                                    contlink=0;
+                                    hlp=0;
+                                    evinc=0;
+                                    future=2;
+                                    writen=1;
+                                    al_show_native_message_box(display, "Stop!","Introduce the function's name that will be related to the link","Write the name on the box below, press enter and then click on the first State you want to link" ,
+                                 NULL, ALLEGRO_MESSAGEBOX_OK_CANCEL);
+                                             }//add
+                               
+                                if((168<coordy)&&(coordy<224)){
+                                    future=3;
+                                    hlp=0;
+                                    contlink=0;
+                                    writen=0;
+                                    evinc=0;
+                                }
+                                if((224<coordy)&&(coordy<280)){
+                                    future=4;
+                                      al_show_native_message_box(display, "Saved!", "The state machine has been created successfully", "After closing the program you will not be able to modify this machine anymore", 
+                                 NULL, ALLEGRO_MESSAGEBOX_WARN);
+                                    printfsm();
+                                    future=RADIO;
+                                    hlp=0;
+                                    contlink=0;
+                                    evinc=0;
+                                    writen=0;
+                                }
+                                if((280<coordy)&&(coordy<336)){
+                                              evinc=0;
+                                              contlink=0;
+                                              clear_all();
+                                              hlp=0;
+                                              future=RADIO;
+                                              writen=0;
+                                }
+                                if((336<coordy)&&(coordy<(56+336))){
+                                    hlp=1;
+                                    future=RADIO;
+                                }
+                                
+                             }else{
+              hlp=0;
+                                  switch(future){
+                                        case 0:
+                                            if(!writen){
+                                             if (getstate2(coordx,coordy)!=NULL)
+                                       {    
+                                            al_show_native_message_box(display, "Error!", "There's already a State in that Area!", "Operation canceled.", 
+                                 NULL, ALLEGRO_MESSAGEBOX_ERROR);
+                                           future=RADIO;
+                                           break;
+                                       }
+                                             
+                                                             
+                                             
+                                         p2state= addstate();
+                                        if (p2state==NULL) 
+                                        {
+                                          al_show_native_message_box(display, "Error!", "The State introduced already exists", "Operation canceled ", 
+                                 NULL, ALLEGRO_MESSAGEBOX_ERROR);
+                                          break;
+                                 
+                                        }
+                                       p2state->x = coordx;
+                                        p2state->y = coordy;
+                                        future=RADIO;
+                                        for( a=0;a<21;a++){
+                                        wordd[a]=0;
+                                        }
+                                        redraw=true;
+                                        
+                                            break;
+                                        case 1:
+                                            p2ss=getstate2(coordx,coordy);
+                                            writen=1;
+                                           if(p2ss){ 
+                                                for(p2el=statelinked(p2ss);p2el!=NULL;p2el=statelinked(p2ss)){
+                                                    eraselink(p2ss->nombre,p2el->nombre);eraselink(p2el->nombre,p2ss->nombre);
+                                                }
+                                            removestate(coordx,coordy);
+                                            al_draw_bitmap(borrar,(float)((*p2ss).x),(float)((*p2ss).y),0);
+                                            redraw=true;
+                                            }
+                                        for( a=0;a<21;a++){
+                                                           wordd[a]=0;
+                                        }
+                         
+                                        future=RADIO;
+                                          
+                                       
+                                        
+                                             }
+                                        break;
+                                        
+                                  case 2:
+                                            if(!writen){
+                                        switch(evinc){        
+                                            case 0:
+                                                xfun=coordx;
+                                                yfun=coordy;
+                                                evinc=1;
+                                                if(wordd[0]!='\0'){
+                                                    
+                                                strcpy(function,wordd);
+                                                
+                                             for( a=0;a<21;a++){
+                                        wordd[a]=0;}
+                                              al_show_native_message_box(display, "Stop!", "Set the link's event", "Write the event Character in the box below, press enter and then click the second state you wish to link ", 
+                                 NULL, ALLEGRO_MESSAGEBOX_OK_CANCEL);
+                                             writen=1;
+                                            
+                                        break;
+                                            
+                                            case 1:    
+                                            if(!writen){
+                                            xev=coordx;
+                                            yev=coordy;                           
+                                            if(wordd[0]!='\0'){
+                                            evento=wordd[0]; 
+                                            
+                                        
+                                             origin=getstate2(xfun,yfun);
+                                             if(origin){
+                                             
+                                             desti=getstate2(xev,yev);
+                                             if(desti){
+                                             numoflink=linkcount(origin->x,origin->y,desti->x,desti->y);
+                                             dirlink=linkcount2(origin->x,origin->y,desti->x,desti->y);     
+                                             pointer=addlink(function,evento,(*origin).nombre,(*desti).nombre,display);
+                                             future=RADIO;
+                                             redraw=true;
+                                             
+                                             } 
+                                            
+                                       
+                                             }
+                                             for( a=0;a<21;a++){
+                                        wordd[a]=0;
+                                        }
+                                        evinc=0;
+                                        future=RADIO;
+                                        redraw=true;
+                                        break;     
+                                            }else{
+                                             al_show_native_message_box(display, "ERROR!", "ERROR!", "Event field can't be empty",  NULL, ALLEGRO_MESSAGEBOX_ERROR);
+                                            
+                                            }
+                                            }
+                                                }else{
+                                                /////////////
+                                                }
+                                            }}
+                                        break;
+                                        
+                                        case 3:
+                                            writen=0;//-LINK
+                                             if(!contlink){
+                                             origin=getstate2(coordx,coordy);
+                                             if(origin)
+                                             contlink+=1;
+                                         } else{
+                                             contlink=0;
+                                             desti=getstate2(coordx,coordy);
+                                             if(desti){
+                                             numoflink=linkcount(origin->x,origin->y,desti->x,desti->y);
+                                             switch(numoflink){
+                                                 case 0:
+                                                     al_show_native_message_box(display, "ERROR!", "ERROR!", "Link doesn't exist!", 
+                                 NULL, ALLEGRO_MESSAGEBOX_ERROR);
+                                                     break;
+                                                 case 1:
+                                                     ward=eraselink((*origin).nombre,(*desti).nombre);
+                                                     if(!ward){
+                                                     al_show_native_message_box(display, "ERROR!", "ERROR!", "Link doesn't exist!", 
+                                 NULL, ALLEGRO_MESSAGEBOX_ERROR);}
+                                                     break;
+                                                 case 2:
+                                                        ward=eraselink((*origin).nombre,(*desti).nombre);
+                                                        if(!ward){
+                                                            al_show_native_message_box(display, "ERROR!", "ERROR!", "Link doesn't exist!", 
+                                 NULL, ALLEGRO_MESSAGEBOX_ERROR);
+                                                        }
+                                                        break;
+                                             
+                                             }
+                                             future=RADIO;
+                                             redraw=true;
+                                             }        
+                                         }
+                                     break;
+                                }    
+                                }
+      }
+     
+ 
+if(redraw && al_is_event_queue_empty(event_queue)) {
+         redraw = false; //cuando ya dibuje, espero de nuevo al timer
+    static STATE* statefnd;
+    static STATE*busclink;
+    static LINK* linki;
+    
+   al_clear_to_color(al_map_rgb(255,255,255));
+   al_draw_bitmap(badd,0,0,0);
+   al_draw_bitmap(help,0,336,0);
+   al_draw_bitmap(bdel,0,56,0);
+   al_draw_bitmap(bunir,0,112,0);
+   al_draw_bitmap(itba,0,900,0);
+   al_draw_bitmap(texto,0,168,0);
+   al_draw_bitmap(save,0,224,0);
+   al_draw_bitmap(clearbtn,0,280,0);
+   al_draw_bitmap(escrib,700,940,0);
+   al_draw_ustr(font, al_map_rgb(255, 255, 255), 730, 960, ALLEGRO_ALIGN_LEFT, string2);
+   for(statefnd=statedir; statefnd!=NULL;statefnd=statefnd->p2next){
+         al_draw_bitmap(estado,statefnd->x,statefnd->y,0);
+         al_draw_justified_text(font,al_map_rgb(255,255,255),(statefnd->x)+17,(statefnd->x)+20,(statefnd->y)+35,0,0,statefnd->nombre);
+    }
+   if(future==0){
+       al_draw_bitmap(estado,coordx,coordy,0);
+   }
+
+   for(linki=linkdir;linki!=NULL;linki=linki->p2next){
+       for(statefnd=statedir;(strcmp(statefnd->nombre,linki->origen))!=0;statefnd=statefnd->p2next);
+       for(busclink=statedir;(strcmp(busclink->nombre,linki->destino))!=0;busclink=statefnd->p2next);
+                                if(statefnd->x<busclink->x)
+                                {
+                                             al_draw_line(((*statefnd).x)+DIAM,((*statefnd).y)+RADIO,((*busclink).x),((*busclink).y)+RADIO,al_map_rgb(190,0,0),7);
+                                            al_draw_filled_circle((((busclink->x) + DIAM +(statefnd->x))/2+busclink->x)/2,(((statefnd->y) +DIAM+ (busclink->y))/2+busclink->y+RADIO)/2,8.,al_map_rgb(0,0,0));
+                                }
+                                            else
+                                {al_draw_line(((*statefnd).x),((*statefnd).y)+RADIO,(((*busclink).x)+DIAM),((*busclink).y)+RADIO,al_map_rgb(190,0,0),7);
+                                              al_draw_filled_circle((((busclink->x) + DIAM +(statefnd->x))/2+busclink->x+DIAM)/2,(((statefnd->y) +DIAM+ (busclink->y))/2+busclink->y+RADIO)/2,8.,al_map_rgb(0,0,0));
+
+                                }
+   
+       
+   }
+       if(hlp){
+   al_draw_bitmap(manual,0,0,0);
+   }
+   al_flip_display();
+         
+      }
+      
+   }
+    al_destroy_timer(timer);
+   al_destroy_display(display);
+   al_destroy_bitmap(badd);
+   al_destroy_event_queue(event_queue);
+ 
+   return 0;
+}

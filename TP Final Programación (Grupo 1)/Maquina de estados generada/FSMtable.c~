@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include "FSM.h"
+#include "FSMtable.h"
+
+/*Foward Declarations*/
+
+extern STATE A[];
+extern STATE B[];
+extern STATE C[];
+
+
+/* Prototipos */
+
+void reset (void);
+void Hola (void);
+void Chau (void);
+void Adios (void);
+void Gato (void);
+
+
+/*** tablas de estado ***/
+
+/*** ESTADO: A ***/
+
+STATE A[]=
+{
+	{'D',B,Hola},
+	{'E',C,Chau},
+	{FIN_TABLA,A,reset}
+};
+/*** ESTADO: B ***/
+
+STATE B[]=
+{
+	{'G',A,Chau},
+	{FIN_TABLA,A,reset}
+};
+/*** ESTADO: C ***/
+
+STATE C[]=
+{
+	{'F',A,Adios},
+	{FIN_TABLA,A,reset}
+};
+
+
+/* Interfaz */
+
+STATE *FSM_GetInitState (void)
+{
+return (A);
+}
+
+/* Rutinas de accion */
+
+void reset (void)
+{
+printf("Reset\n");
+}
+
+void Hola (void)
+{
+	printf("Hola\n");
+}
+
+
+void Chau (void)
+{
+	printf("Chau\n");
+}
+
+
+void Adios (void)
+{
+	printf("Adios\n");
+}

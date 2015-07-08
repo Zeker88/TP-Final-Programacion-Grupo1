@@ -1,0 +1,487 @@
+#ifndef LS
+#define LS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define TRUE 1
+#define FALSE 0
+
+/*Estructuras y Variables P�blicas*/
+
+typedef struct vinculo LINK;
+struct vinculo
+{
+    char origen[20];
+    char destino[20];
+    char fun_transf[20];
+    char evento;
+    LINK* p2next;
+};
+
+typedef struct estado STATE;
+struct estado{
+    char nombre[20];
+    int x;
+    int y;
+    STATE* p2next;
+
+};
+
+STATE* statedir=NULL; /*Direcci�n de inicio del arreglo de estados*/
+LINK* linkdir=NULL; /*Idem, pero de v�nculos*/
+int statesnumb; /*Contador del n�mero de estados*/
+int linknumb;/*Ideam, pero de v�nculos*/
+
+/*Prototipos*/
+LINK* getlink(char*,char*); /*Busca la direcci�n del vinculo en funci�n de su origen y destino*/
+LINK* getorigin(char*); /*Busca la direcci�n del vinculo solo en funci�n de su origen*/
+LINK* getdestiny(char*);/*Idem, pero en funci�n del destino*/
+LINK* addlink (char* str, char* str2);/*Agrega un nuevo vinculo, contemplando posibles errores y repeticiones*/
+int linksofstate (char*);/*Devuelve el n�mero de vinculos que salen de un estado*/
+void removelink (void);/*Elimina un vinculo*/
+void eraselink (char*,char*);/*Idem, pero no contempla errores. Funci�n de uso interno*/
+void deletedep (char*);/*Elimina todos los v�nculos que dependen de un estado determinado*/
+int linkcount (int x, int y, int x2, int y2);
+STATE* getstate(char*);/*Busca la direcci�n del estado en funci�n de su nombre*/
+STATE* addstate(void);/*Agrega un nuevo estado, contemplando errores, repetici�n, etc*/
+STATE* returnstate(void);/*Devuelve la direcci�n de inicio del arreglo de estados*/
+STATE* getstate2(int x, int y);/*Busca la direccioon del estado en funcion de sus coordenadas*/
+void removestate(int, int);/*Elimina un estado, junto a todos los v�nculos que lo involucran*/
+
+
+
+
+
+
+
+
+
+
+
+/*Funciones de Links*/
+
+
+LINK* getlink(char* origin, char* destiny)
+{
+    LINK* linkfound;
+    for(linkfound=linkdir; linkfound!=NULL;linkfound=linkfound->p2next)
+    {
+        if(!((strcmp(linkfound->origen,origin)!=0)|| ((strcmp(linkfound->destino, destiny))!=0)))
+        {
+            return linkfound;
+        }
+
+
+    }
+    return(linkfound);
+
+}
+
+LINK* addlink (char* str, char* str2)
+{
+    LINK* clon;
+    char fun[20];
+    if (linkdir==NULL)
+        {
+             if(getstate(str)==NULL)
+            {
+                printf("\nEl estado de origen no existe!");
+                return NULL;
+            }
+             if(getstate(str2)==NULL)
+            {
+                printf("\nEl estado de destino no existe!");
+                return NULL;
+            }
+            if(getlink(str,str2)!=NULL)
+            {
+                printf("\nEl enlace ya existe!");
+                return NULL;
+            }
+
+            linkdir=calloc(1,sizeof(LINK));
+            linkdir->p2next=NULL;
+            strcpy(linkdir->origen, str);
+            strcpy(linkdir->destino, str2);
+            printf("\nNombre de la funcion asociada al vinculo:");
+            gets(fun);
+            strcpy(linkdir->fun_transf,fun);
+            printf("\nEvento asociado al vinculo:");
+            linkdir->evento=getchar();getchar();
+            ++linknumb;
+            return(linkdir);
+        }
+    else
+        {
+            for(clon=linkdir;clon->p2next!=NULL;clon=clon->p2next);
+              if(getstate(str)==NULL)
+            {
+                printf("\nEl estado de origen no existe!");
+                return NULL;
+            }
+             if(getstate(str2)==NULL)
+            {
+                printf("\nEl estado de destino no existe!");
+                return NULL;
+            }
+            if(getlink(str,str2)!=NULL)
+            {
+                printf("\nEl enlace ya existe!");
+                return NULL;
+            }
+            clon->p2next=calloc(1,sizeof(LINK));
+            clon->p2next->p2next=NULL;
+            strcpy(clon->p2next->origen, str);
+            strcpy(clon->p2next->destino, str2);
+            printf("\nNombre de la funcion asociada al vinculo:");
+            gets(fun);
+            strcpy(clon->p2next->fun_transf,fun);
+            printf("\nEvento asociado al vinculo:");
+            clon->p2next->evento=getchar();getchar();
+            ++linknumb;
+            return(clon->p2next);
+
+        }
+}
+
+void removelink (void)
+{
+    char str[20];
+    char str2[20];
+    LINK* clon;
+    LINK* aux;
+    printf("\nIntroduzca el Origen del vinculo a eliminar: ");
+    gets(str);
+    printf("\nIntroduzca el Destino del vinculo a eliminar: ");
+    gets(str2);
+    if (getlink(str,str2)==NULL)
+    {
+        printf("\nNo existe el vinculo que se quiere eliminar!");
+        return;
+    }
+    if (linkdir==NULL)
+    {
+        printf("\nNo hay Vinculos!");
+        return;
+    }
+    if((linkdir->p2next)==NULL)
+    {
+
+       if(((strcmp(linkdir->origen,str)!=0)|| (strcmp(linkdir->destino, str2)!=0)))
+        {
+            printf("\nEl vinculo que desea eliminar no existe");
+        }
+        else
+        {
+            free(linkdir);
+            linkdir=NULL;
+            --linknumb;
+        }
+        return;
+    }
+    if(!((strcmp(linkdir->origen,str)!=0)|| (strcmp(linkdir->destino, str2)!=0)))
+    {
+    aux=linkdir->p2next;
+    free(linkdir);
+    linkdir = aux;
+    --linknumb;
+    return;
+    }
+    for(clon=linkdir;((strcmp(clon->p2next->origen,str)!=0)|| (strcmp(clon->p2next->destino, str2)!=0));clon=clon->p2next)
+    {
+        if(clon->p2next==NULL)
+        {
+
+               printf("\nEl vinculo que desea eliminar no existe");
+               return;
+        }
+
+    }
+    aux=clon->p2next->p2next;
+    free(clon->p2next);
+    clon->p2next = aux;
+    --linknumb;
+    return;
+
+
+
+}
+
+LINK* getorigin(char* origin)
+{
+    LINK* linkfound;
+    for(linkfound=linkdir; linkfound!=NULL;linkfound=linkfound->p2next)
+    {
+        if(!((strcmp(linkfound->origen,origin)!=0)))
+        {
+            return linkfound;
+        }
+
+
+    }
+    return(linkfound);
+
+}
+
+LINK* getdestiny(char* destiny)
+{
+    LINK* linkfound;
+    for(linkfound=linkdir; linkfound!=NULL;linkfound=linkfound->p2next)
+    {
+        if(! ((strcmp(linkfound->destino, destiny))!=0))
+        {
+            return linkfound;
+        }
+
+
+    }
+    return(linkfound);
+
+}
+
+void eraselink (char* str, char* str2)
+{
+
+    LINK* clon;
+    LINK* aux;
+    if (getlink(str,str2)==NULL)
+    {
+        return;
+    }
+    if (linkdir==NULL)
+    {
+        return;
+    }
+    if((linkdir->p2next)==NULL)
+    {
+
+       if(((strcmp(linkdir->origen,str)!=0)|| (strcmp(linkdir->destino, str2)!=0)))
+       {
+
+       }
+        else
+        {
+            free(linkdir);
+            linkdir=NULL;
+            --linknumb;
+        }
+        return;
+    }
+    if(!((strcmp(linkdir->origen,str)!=0)|| (strcmp(linkdir->destino, str2)!=0)))
+    {
+    aux=linkdir->p2next;
+    free(linkdir);
+    linkdir = aux;
+    --linknumb;
+    return;
+    }
+    for(clon=linkdir;((strcmp(clon->p2next->origen,str)!=0)|| (strcmp(clon->p2next->destino, str2)!=0));clon=clon->p2next)
+    {
+        if(clon->p2next==NULL)
+        {
+
+               return;
+        }
+
+    }
+    aux=clon->p2next->p2next;
+    free(clon->p2next);
+    clon->p2next = aux;
+    --linknumb;
+    return;
+
+
+
+}
+
+void deletedep (char* state)
+{
+    while(getorigin(state)!=NULL)
+        eraselink(getorigin(state)->origen, getorigin(state)->destino);
+    while(getdestiny(state)!=NULL)
+        eraselink(getdestiny(state)->origen, getdestiny(state)->destino);
+}
+
+int linksofstate (char* state)
+{
+    int linkcount=0;
+    LINK* linkfound;
+    for(linkfound=linkdir; linkfound!=NULL;linkfound=linkfound->p2next)
+    {
+        if(!((strcmp(linkfound->origen,state)!=0)))
+        {
+            ++linkcount;
+        }
+    }
+    /*printf("Linkcount=%d",linkcount);*/
+    return(linkcount);
+}
+
+/*Funciones de State*/
+
+STATE* getstate(char* statename)
+{
+    STATE* statefound;
+    for(statefound=statedir; statefound!=NULL;statefound=statefound->p2next)
+    {
+        if(!strcmp(statefound->nombre,statename))
+            return statefound;
+
+    }
+    return(statefound);
+
+}
+
+STATE* getstate2(int x, int y)
+{
+    STATE* statefound;
+    for(statefound=statedir; statefound!=NULL;statefound=statefound->p2next)
+    {
+        if((x>=((*statefound).x)) && (x<(((*statefound).x)+60)) && (y>=((*statefound).y)) && (y<(((*statefound).y)+60)))
+            return statefound;
+
+    }
+    return (statefound);
+
+}
+
+
+STATE* addstate (void)
+{
+    STATE* clon;
+    char str[20];
+    if (statedir==NULL)
+        {
+            printf("\nNombre del nuevo estado:");
+            gets(str);
+            if(getstate(str)!=NULL)
+            {
+                printf("\nEl estado ya existe!");
+                return NULL;
+            }
+            statedir=calloc(1,sizeof(STATE));
+            statedir->p2next=NULL;
+            strcpy(statedir->nombre, str);
+            ++statesnumb;
+            return(statedir);
+        }
+    else
+        {
+            for(clon=statedir;clon->p2next!=NULL;clon=clon->p2next);
+            printf("\nNombre del nuevo estado:");
+            gets(str);
+            if(getstate(str)!=NULL)
+            {
+                printf("\nEl estado ya existe!");
+                return NULL;
+            }
+            clon->p2next=calloc(1,sizeof(STATE));
+            clon->p2next->p2next=NULL;
+            strcpy(clon->p2next->nombre, str);
+            ++statesnumb;
+            return(clon->p2next);
+
+        }
+}
+
+void removestate (int x, int y)
+{
+    char str[20];
+    STATE* clon;
+    STATE* clon1;
+    STATE* aux;
+
+    if (statedir==NULL)
+    {
+        printf("\nNo hay estados!");
+        return;
+    }
+    
+    for (clon1 = statedir; clon1 !=NULL; clon1= clon1->p2next) {
+          if((x>=(clon1->x)) && (x<((clon1->x)+60)) && (y>=(clon1->y)) && (y<(clon1->y)+60))
+           break; 
+
+}
+
+     if(!clon){return;}       
+    
+    
+   
+    clon=clon1;
+    strcpy(str,clon->nombre);
+    
+    if (getstate(str)==NULL)
+    {
+        printf("\nNo existe el estado que se quiere eliminar!");
+        return;
+    }
+    
+    if((statedir->p2next)==NULL)
+    {
+
+        if(strcmp(statedir->nombre, str))
+        {
+            printf("\nEl estado que desea eliminar no existe");
+        }
+        else
+        {
+            deletedep(str);
+            free(statedir);
+            statedir=NULL;
+            --statesnumb;
+        }
+        return;
+    }
+    if(!strcmp(statedir->nombre,str))
+    {
+    deletedep(str);
+    aux=statedir->p2next;
+    free(statedir);
+    statedir = aux;
+    --statesnumb;
+    return;
+    }
+    for(clon=statedir;strcmp(clon->p2next->nombre,str);clon=clon->p2next)
+    {
+        if(clon->p2next==NULL)
+        {
+
+               printf("\nEl estado que desea eliminar no existe");
+               return;
+        }
+
+    }
+    deletedep(str);
+    aux=clon->p2next->p2next;
+    free(clon->p2next);
+    clon->p2next = aux;
+    --statesnumb;
+    return;
+
+
+}
+STATE* returnstate(void)
+{
+    return(statedir);
+
+}
+
+int linkcount (int x, int y, int x2, int y2)
+{
+	int counter=0;
+	STATE* clone;
+	for (clone=linkdir; clone!=NULL; clone= clone->p2next)
+	{
+		if((!strcmp(clone->origen, getstate2(x,y)->nombre) && (!strcmp(clon->destino, getstate2(x2,y2))))
+		counter++;
+		if((!strcmp(clone->destino, getstate2(x,y)->nombre) && (!strcmp(clon->origen, getstate2(x2,y2))))
+		counter++;
+
+	}
+	return counter;
+	
+}
+
+
+
+#endif /*LS included*/
